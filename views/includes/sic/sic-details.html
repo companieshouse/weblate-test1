@@ -1,0 +1,7 @@
+<p class="govuk-body-m">
+
+{% for sicCode in sicCodes %}
+  <strong>{{sicCode.code}}</strong> - {{sicCode.description}}<br>
+{% endfor %}
+
+</p>

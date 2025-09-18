@@ -1,0 +1,104 @@
+{% extends "layout.html" %}
+
+{% block pageTitle %}
+  {% if pscDetailsError %}
+    Error:
+  {% endif %}
+  Review the people with significant control
+{% endblock %}
+
+{% block backLink %}
+  {% include "includes/back-link.html" %}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-three-quarters">
+      {% if pscDetailsError %}
+        {{ govukErrorSummary({
+          titleText: "There is a problem",
+          errorList: [
+          {
+            text: pscDetailsError,
+            href: "#psc"
+          }
+        ]
+        }) }}
+        {% set activePscsError = { text: pscDetailsError } %}
+      {% else %}
+        {% set activePscsError = false %}
+      {% endif %}
+      <form action="" method="post">
+        {% include "includes/csrf_token.html" %}
+        <h1 class="govuk-heading-l">Check the people with significant control (PSCs) details</h1>
+
+        {% include "includes/psc-details.html" %}
+
+        {% set individualPscHtml %}
+          {% include "tasks/includes/individual-psc.html" %}
+        {% endset %}
+
+        {% set relevantLegalEntityHtml %}
+          {% include "tasks/includes/relevant-legal-entity.html" %}
+        {% endset %}
+
+        {% set otherRegistrablePersonHtml %}
+          {% include "tasks/includes/other-registrable-person.html" %}
+        {% endset %}
+
+        {% set pscHTML = [] %}
+        {% if individualPscList|length %}
+          {% set pscHTML = (pscHTML.push([{html: individualPscHtml}]), pscHTML) %}
+        {% endif %}
+        {% if relevantLegalEntityList|length %}
+          {% set pscHTML = (pscHTML.push([{html: relevantLegalEntityHtml}]), pscHTML) %}
+        {% endif %}
+        {% if otherRegistrablePersonList|length %}
+          {% set pscHTML = (pscHTML.push([{html: otherRegistrablePersonHtml}]), pscHTML) %}
+        {% endif %}
+
+        {{ govukTable({
+          rows: pscHTML
+        }) }}
+
+        {{ govukRadios({
+          classes: "govuk-radios",
+          idPrefix: "psc",
+          name: "psc",
+          errorMessage: activePscsError,
+          fieldset: {
+            legend: {
+              html: "Are the PSC details correct?",
+              classes: "govuk-fieldset__legend--l"
+            }
+          },
+          items: [
+            {
+              value: "yes",
+              text: "Yes",
+              attributes: {
+                "data-event-id": "psc-details-yes-radio-button"
+              }
+            },
+            {
+              value: "no",
+              text: "No",
+              attributes: {
+                "data-event-id": "psc-details-no-radio-button"
+              }
+            },
+            {
+              value: "recently_filed",
+              text: "No, but an update has been submitted",
+              attributes: {
+                "data-event-id": "psc-details-recently-filed-radio-button"
+              }
+            }
+          ]
+        }) }}
+
+        {% include "includes/continue-button.html" %}
+      </form>
+    </div>
+  </div>
+{% endblock %}

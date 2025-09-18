@@ -1,0 +1,81 @@
+{% extends "layout.html" %}
+
+{% block pageTitle %}
+  Review where the company records are held
+{% endblock %}
+
+{% block backLink %}
+  {% include "includes/back-link.html" %}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <form action="" method="post">
+        {% include "includes/csrf_token.html" %}
+        {% if registerLocationsErrorMsg %}
+          {{ govukErrorSummary({
+              titleText: "There is a problem",
+              errorList: [
+                {
+                  text: registerLocationsErrorMsg,
+                  href: "#registers"
+                }
+              ]
+            }) }}
+          {% set registerLocationsErrorMsg = {
+              text: registerLocationsErrorMsg
+            } %}
+        {% else %}
+          {% set registerLocationsErrorMsg = false %}
+        {% endif %}
+
+      <h1 class="govuk-heading-l">Check where the company records are kept</h1>
+
+        {% include "tasks/includes/register.html" %}
+
+          {{ govukRadios({
+            classes: "govuk-radios",
+            idPrefix: "registers",
+            name: "registers",
+            errorMessage: registerLocationsErrorMsg,
+            fieldset: {
+              legend: {
+                html: "Is this where the company records are kept?",
+                classes: "govuk-fieldset__legend--l"
+              }
+            },
+            hint: {
+              html: registerHTML
+            },
+            items: [
+              {
+                value: "yes",
+                text: "Yes",
+                attributes: {
+                  "data-event-id": "register-yes-radio-button"
+                }
+              },
+              {
+                value: "no",
+                text: "No",
+                attributes: {
+                  "data-event-id": "register-no-radio-button"
+                }
+              },
+              {
+                value: "recently_filed",
+                text: "No, but an update has been submitted",
+                attributes: {
+                  "data-event-id": "register-recently-filed-radio-button"
+                }
+              }
+            ]
+          }) }}
+
+          {% include "includes/continue-button.html" %}
+
+        </form>
+      </div>
+    </div>
+  {% endblock %}

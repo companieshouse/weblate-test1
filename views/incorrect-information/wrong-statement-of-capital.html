@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block pageTitle %}
+  Incorrect SOC
+{% endblock %}
+
+{% block backLink %}
+  {% include "includes/back-link.html" %}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <form action="" method="post">
+        {% include "includes/csrf_token.html" %}
+        <h1 class="govuk-heading-xl">
+          You cannot use this service
+        </h1>
+
+        {% if totalAmountUnpaidValidation === false or sharesValidation === false %}
+
+          {% if totalAmountUnpaidValidation === false %}
+            <p>The total amount unpaid for all shares is missing on this company’s statement of capital.</p>
+          {% endif %}
+
+          {% if sharesValidation === false %}
+            <p>The company's share capital does not match the shares held by its shareholders.</p>
+          {% endif %}
+
+          <p>You must update this information by filing a confirmation statement through our 
+            <a target="_blank" rel="noopener noreferrer" href="{{EWF_URL}}" data-event-id="webfiling-service-link-from-invalid-share-or-amount-unpaid-totals-wrong-statement-of-capital-page">WebFiling service (opens in a new tab)</a>. You will need to sign in to or create a WebFiling account to do this.</p>
+
+        {% else %}
+          <p>You must update this information by filing a confirmation statement through our 
+            <a target="_blank" rel="noopener noreferrer" href="{{EWF_URL}}" data-event-id="webfiling-service-link-from-wrong-statement-of-capital-page">WebFiling service (opens in a new tab)</a>. You will need to sign in to or create a WebFiling account to do this.
+          </p>
+        {% endif %}
+        <p><a href="https://www.smartsurvey.co.uk/s/fileconfstmnt-wrongsharecap/">What did you think of this service?</a> (takes 2 minutes)</p>
+      </form>
+    </div>
+  </div>
+{% endblock %}

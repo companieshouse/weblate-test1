@@ -1,0 +1,49 @@
+<h2 class="app-task-list__section">
+    Addresses
+</h2>
+<ul class="app-task-list__items">
+    {% if taskList.tasks.registeredEmailAddress %}
+        <li class="app-task-list__item">
+            <span class="app-task-list__task-name">
+                <a href="{{taskList.tasks.registeredEmailAddress.url}}" data-event-id="registered-email-address-company-information-section">
+                    Registered email address
+                </a>
+            </span>
+            {% if taskList.tasks.registeredEmailAddress.state === "CHECKED" %}
+                {{ showChecked | safe | replace("statusIdPlaceholder", "emailStatus")}}
+            {% elseif taskList.tasks.registeredEmailAddress.state === "IN_PROGRESS" %}
+                {{ showInProgress | safe | replace("statusIdPlaceholder", "emailStatus")}}
+            {% else %}
+                {{ showNotChecked | safe | replace("statusIdPlaceholder", "emailStatus")}}
+            {% endif %}
+        </li>
+    {% endif %}
+    <li class="app-task-list__item">
+        <span class="app-task-list__task-name">
+            <a href="{{taskList.tasks.registeredOfficeAddress.url}}" data-event-id="registered-office-address-company-information-section">
+                Registered office address
+            </a>
+        </span>
+        {% if taskList.tasks.registeredOfficeAddress.state === "CHECKED" %}
+            {{ showChecked | safe | replace("statusIdPlaceholder", "roaStatus")}}
+        {% elseif taskList.tasks.registeredOfficeAddress.state === "IN_PROGRESS" %}
+            {{ showInProgress | safe | replace("statusIdPlaceholder", "roaStatus")}}
+        {% else %}
+            {{ showNotChecked | safe | replace("statusIdPlaceholder", "roaStatus")}}
+        {% endif %}
+    </li>
+    <li class="app-task-list__item">
+        <span class="app-task-list__task-name">
+            <a href="{{taskList.tasks.registerLocations.url}}" data-event-id="register-locations-company-information-section">
+                Register locations
+            </a>
+        </span>
+        {% if taskList.tasks.registerLocations.state === "CHECKED" %}
+            {{ showChecked | safe | replace("statusIdPlaceholder", "registersStatus")}}
+        {% elseif taskList.tasks.registerLocations.state === "IN_PROGRESS" %}
+            {{ showInProgress | safe | replace("statusIdPlaceholder", "registersStatus")}}
+        {% else %}
+            {{ showNotChecked | safe | replace("statusIdPlaceholder", "registersStatus")}}
+        {% endif %}
+    </li>
+</ul>

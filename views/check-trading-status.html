@@ -1,0 +1,77 @@
+{% extends "layout.html" %}
+
+{% block pageTitle %}
+  {% if tradingStatusErrorMsg %}
+    Error:
+  {% endif %}
+  Company trading status
+{% endblock %}
+
+{% block backLink %}
+  {% include "includes/back-link.html" %}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <form action="" method="post">
+        {% include "includes/csrf_token.html" %}
+        {% if tradingStatusErrorMsg %}
+          {{ govukErrorSummary({
+            titleText: "There is a problem",
+            errorList: [
+            {
+              text: tradingStatusErrorMsg,
+              href: "#trading-status"
+            }
+          ]
+          }) }}
+          {% set tradingStatusError = {
+            text: tradingStatusErrorMsg
+          } %}
+        {% else %}
+          {% set tradingStatusError = false %}
+        {% endif %}
+
+
+        <h1 class="govuk-heading-xl">Check the trading status of shares</h1>
+
+        <p>No company shares were traded on a market during this confirmation period.</p>
+
+        {{ govukRadios({
+          classes: "govuk-radios--inline",
+          idPrefix: "trading-status",
+          name: "tradingStatus",
+          errorMessage: tradingStatusError,
+          fieldset: {
+            legend: {
+              text: "Is the trading status of shares correct?",
+              isPageHeading: false,
+              classes: "govuk-fieldset__legend--l"
+            }
+          },
+          items: [
+            {
+              value: "yes",
+              text: "Yes",
+              attributes: {
+                "data-event-id": "trading-status-correct-yes"
+              }
+            },
+            {
+              value: "no",
+              text: "No",
+              attributes: {
+                "data-event-id": "trading-status-correct-no"
+              }
+            }
+          ]
+        }) }}
+
+        {% include "includes/continue-button.html" %}
+        
+      </form>
+    </div>
+</div>
+{% endblock %}

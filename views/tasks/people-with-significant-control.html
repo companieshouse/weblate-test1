@@ -1,0 +1,100 @@
+{% extends "layout.html" %}
+
+{% block pageTitle %}
+  {% if peopleWithSignificantControlErrorMsg %}
+    Error:
+  {% endif %}
+  Review the people with significant control
+{% endblock %}
+
+{% block backLink %}
+  {% include "includes/back-link.html" %}
+{% endblock %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-three-quarters">
+
+      <form action="" method="post">
+        {% include "includes/csrf_token.html" %}
+        {% if peopleWithSignificantControlErrorMsg %}
+          {{ govukErrorSummary({
+            titleText: "There is a problem",
+            errorList: [
+              {
+                text: "Select yes if the PSC details are correct",
+                href: "#psc-radio-value"
+              }
+            ]
+          }) }}
+          {% set peopleWithSignificantControlError = {
+            text: peopleWithSignificantControlErrorMsg
+          } %}
+          {% else %}
+            {% set peopleWithSignificantControlError = false %}
+        {% endif %}
+
+        <h1 class="govuk-heading-l">Check the people with significant control (PSCs)</h1>
+
+        {% include "includes/psc-details.html" %}
+
+        {% if MultiplePscFlag === "true" %}
+          {% include "tasks/includes/normal-psc.html" %}
+        {% else %}
+          {% for psc in pscList %}
+            {% if psc.pscTemplateType === "rle" %}
+              {% include "tasks/includes/single-relevant-legal-entity.html" %}
+            {% elif psc.pscTemplateType === "psc" %}
+              {% include "tasks/includes/normal-psc.html" %}
+            {% elif psc.pscTemplateType === "orp" %}
+              {% include "tasks/includes/single-relevant-legal-entity.html" %}
+            {% else %}
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+
+        {{ govukRadios({
+          classes: "govuk-radios",
+          idPrefix: "psc-radio-value",
+          name: "pscRadioValue",
+          errorMessage: peopleWithSignificantControlError,
+          fieldset: {
+            legend: {
+              html: "Are the PSC details correct?",
+              classes: "govuk-fieldset__legend--l"
+            }
+          },
+          items: [
+            {
+              value: "yes",
+              text: "Yes",
+              label: "people-with-significant-control Yes",
+              attributes: {
+                "data-event-id": "psc-yes-radio-button"
+              }
+            },
+            {
+              value: "no",
+              text: "No",
+              label: "people-with-significant-control No",
+              attributes: {
+                "data-event-id": "psc-no-radio-button"
+              }
+            },
+            {
+              value: "recently_filed",
+              text: "No, but an update has been submitted",
+              label: "people-with-significant-control No, but an update has been submitted",
+              attributes: {
+                "data-event-id": "psc-recently-filed-radio-button"
+              }
+            }
+          ]
+        }) }}
+
+        {% include "includes/continue-button.html" %}
+      </form>
+    </div>
+  </div>
+{% endblock %}

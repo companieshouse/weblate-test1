@@ -1,0 +1,82 @@
+{% extends "layout.html" %}
+
+{% block pageTitle %}
+  Review the registered office address
+{% endblock %}
+
+{% block backLink %}
+  {% include "includes/back-link.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <form action="" method="post">
+      {% include "includes/csrf_token.html" %}
+      {% if roaErrorMsg %}
+            {{ govukErrorSummary({
+                titleText: "There is a problem",
+                errorList: [
+                  {
+                    text: roaErrorMsg,
+                    href: "#registered-office-address"
+                  }
+                ]
+              }) }}
+            {% set roaErrorMsg = {
+                text: roaErrorMsg
+              } %}
+            {% else %}
+              {% set roaErrorMsg = false %}
+            {% endif %}
+
+      <h1 class="govuk-heading-l">Check the registered office address</h1>
+
+      {% include "includes/roa.html" %}
+
+      {{ govukRadios({
+        classes: "govuk-radios",
+        idPrefix: "registered-office-address",
+        name: "registeredOfficeAddress",
+        errorMessage: roaErrorMsg,
+        fieldset: {
+          legend: {
+            html: "Is the registered office address correct?",
+            isPageHeading: false,
+            classes: "govuk-fieldset__legend--l"
+          }
+        },
+        hint: {
+      html: roaHTML
+      },
+        items: [
+          {
+            value: "yes",
+            text: "Yes",
+            attributes: {
+              "data-event-id": "roa-yes-radio-button"
+            }
+          },
+          {
+            value: "no",
+            text: "No",
+            attributes: {
+              "data-event-id": "roa-no-radio-button"
+            }
+          },
+          {
+            value: "recently_filed",
+            text: "No, but an update has been submitted",
+            attributes: {
+              "data-event-id": "roa-recently-filed-radio-button"
+            }
+          }
+        ]
+      }) }}
+
+      {% include "includes/continue-button.html" %}
+
+    </form>
+  </div>
+</div>
+{% endblock %}

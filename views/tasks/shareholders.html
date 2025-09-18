@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+
+{% block pageTitle %}
+  Review the shareholders
+{% endblock %}
+
+{% block backLink %}
+  {% include "includes/back-link.html" %}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <form action="" method="post">
+        {% include "includes/csrf_token.html" %}
+        {% if shareholdersErrorMsg %}
+            {{ govukErrorSummary({
+                titleText: "There is a problem",
+                errorList: [
+                  {
+                    text: shareholdersErrorMsg,
+                    href: "#shareholders"
+                  }
+                ]
+              }) }}
+            {% set shareholdersErrorMsg = {
+                text: shareholdersErrorMsg
+              } %}
+          {% else %}
+            {% set shareholdersErrorMsg = false %}
+          {% endif %}
+
+        <h1 class="govuk-heading-xl">Check the shareholder details</h1>
+
+        {% if shareholders.length === 1 %}
+          <h2 class="govuk-heading-m">1 shareholder</h2>
+        {% else %}
+          <h2 class="govuk-heading-m">{{shareholders.length}}
+            shareholders</h2>
+        {% endif %}
+
+        {% include "includes/shareholders.html" %}
+
+          {{ govukRadios({
+          classes: "govuk-radios--inline",
+          idPrefix: "shareholders",
+          name: "shareholders",
+          errorMessage: shareholdersErrorMsg,
+          fieldset: {
+            legend: {
+              html: "Are the shareholder details correct?",
+              classes: "govuk-fieldset__legend--l"
+            }
+          },
+          items: [
+            {
+              value: "yes",
+              text: "Yes",
+              attributes: {
+                "data-event-id": "yes-radio-button"
+              }
+            },
+            {
+              value: "no",
+              text: "No",
+              attributes: {
+                "data-event-id": "no-radio-button"
+              }
+            }
+          ]
+          }) }}
+
+        {% include "includes/continue-button.html" %}
+
+      </form>
+    </div>
+  </div>
+{% endblock %}

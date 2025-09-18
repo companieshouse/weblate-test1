@@ -1,0 +1,11 @@
+*
+
+!api-enumerations
+!dist
+!docker_start.sh
+!node_modules
+!package-lock.json
+!package.json
+!src
+!tsconfig.json
+!views

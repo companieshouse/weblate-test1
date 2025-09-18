@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+
+{% block pageTitle %}
+{% if errorList.length > 0 %}
+  Error:
+{% endif %} Review the SIC codes
+{% endblock %}
+
+{% block backLink %}
+  {% include "includes/back-link.html" %}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <form action="" method="post">
+      {% include "includes/csrf_token.html" %}
+      {% if sicCodeErrorMsg %}
+        {{ govukErrorSummary({
+          titleText: "There is a problem",
+          errorList: [
+            {
+              text: sicCodeErrorMsg,
+              href: "#sic-code-status"
+            }
+          ]
+        })
+      }}
+      {% set sicCodeError = {
+        text: sicCodeErrorMsg
+        }
+      %}
+      {% else %}
+        {% set sicCodeError = false %}
+      {% endif %}
+
+        {% set sicDetails %}
+        <p>The SIC (Standard Industrial Classification) code indicates the nature of the company’s business. A company can have up to 4 SIC codes.
+        </p>
+        <p>Check the
+          <a href="http://resources.companieshouse.gov.uk/sic/" target="_blank" rel="noopener noreferrer" data-event-id="condensed-sic-code-link">condensed SIC codes list (opens in a new tab)</a>.</p>
+        {% endset %}
+
+        <h1 class="govuk-heading-l">Check the SIC codes</h1>
+        {{ govukDetails({
+            summaryHtml: '<div data-event-id="what-is-a-sic-code-link"> What is a SIC code? </div>',
+            html: sicDetails
+        }) }}
+
+        <p>Our records show these SIC codes for the company: </p>
+
+        {% include "includes/sic/sic-details.html" %}
+
+        {{ govukRadios({
+              classes: "govuk-radios--inline",
+              idPrefix: "sic-code-status",
+              name: "sicCodeStatus",
+              errorMessage: sicCodeError,
+              fieldset: {
+                legend: {
+                  html: "Are the SIC codes correct?",
+                  isPageHeading: false,
+                  classes: "govuk-fieldset__legend--l"
+                }
+              },
+              items: [
+                {
+                  value: "yes",
+                  text: "Yes",
+                  attributes: {
+                    "data-event-id": "yes-radio-button"
+                  }
+                },
+                {
+                  value: "no",
+                  text: "No",
+                  attributes: {
+                    "data-event-id": "no-radio-button"
+                  }
+                }
+              ]
+          }) }}
+
+        {% include "includes/continue-button.html" %}
+
+      </form>
+    </div>
+  </div>
+{% endblock %}

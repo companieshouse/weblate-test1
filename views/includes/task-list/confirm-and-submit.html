@@ -1,0 +1,15 @@
+<h2 class="app-task-list__section">
+    Confirm and submit
+</h2>
+<ul class="app-task-list__items">
+    <li class="app-task-list__item">
+        <span class="app-task-list__task-name">
+        {% if taskList.allTasksCompleted %}
+            <a href="{{reviewUrl}}">Submit</a>
+            </span><strong class="govuk-tag govuk-tag--grey app-task-list__tag" id="submit-pay-status">Not started</strong>
+        {% else %}
+            Submit
+            </span><strong class="govuk-tag govuk-tag--grey app-task-list__tag" id="submit-pay-status">Cannot start yet</strong>
+        {% endif %}
+    </li>
+</ul>

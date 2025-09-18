@@ -1,0 +1,77 @@
+{% extends "layout.html" %}
+
+{% block pageTitle %}
+  Incorrect register - File a confirmation statement
+{% endblock %}
+
+{% block backLink %}
+    {% include "includes/back-link.html" %}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <form action="" method="post">
+        {% include "includes/csrf_token.html" %}
+        {% include "includes/error-alert-message.html" %}
+        {% if errorMsgText %}
+          {% set registerErrorMsg = {
+            text: errorMsgText
+          } %}
+        {% else %}
+          {% set registerErrorMsg = false %}
+        {% endif %}
+          
+        <h1 class="govuk-heading-l">
+          You need to update the company details
+        </h1>
+        <p>You will need to update where the company records are kept on our 
+          <a target="_blank" href="{{EWF_URL}}" rel="noopener noreferrer" data-event-id="webfiling-link">WebFiling service (opens in a new tab)</a>
+           before you can file a confirmation statement.</p>
+        
+        <p>Return to this window after you have made the update.</p>
+
+        {{ govukRadios({
+          idPrefix: "radioButton",
+          name: "radioButton",
+          errorMessage: registerErrorMsg,
+          fieldset: {
+            legend: {
+              text: "Have you updated where the company records are kept?",
+              isPageHeading: true,
+              classes: "govuk-fieldset__legend--m"
+            }
+          },
+          items: [
+            {
+              value: "yes",
+              text: "Yes",
+              attributes: {
+                "data-event-id": "wrong-registers-yes-radio-button"
+              }
+            },
+            {
+              value: "no",
+              text: "No, I do not need to update where the company records are kept",
+              attributes: {
+                "data-event-id": "wrong-registers-no-radio-button"
+              }
+            }
+          ]
+        }) }}
+
+        {{ govukButton({
+            text: "Return to confirmation statement",
+            attributes: {
+              "data-event-id": "return-to-confirmation-statement-link",
+              "id": "submit"
+            }
+        }) }}
+        
+      <p><a href="https://www.smartsurvey.co.uk/s/fileconfstmnt-wrongreg/">What did you think of this service?</a>
+      (takes 2 minutes)
+      </p>
+      </form>
+    </div>
+  </div>
+{% endblock %}

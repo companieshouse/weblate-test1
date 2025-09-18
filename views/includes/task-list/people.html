@@ -1,0 +1,47 @@
+<h2 class="app-task-list__section">
+    People
+</h2>
+<ul class="app-task-list__items">
+    <li class="app-task-list__item">
+            <span class="app-task-list__task-name">
+                <a href="{{taskList.tasks.officers.url}}" data-event-id="officers-company-information-section">
+                    Officers
+                </a>
+            </span>
+        {% if taskList.tasks.officers.state === "CHECKED" %}
+            {{ showChecked | safe | replace("statusIdPlaceholder", "officersStatus")}}
+        {% elseif taskList.tasks.officers.state === "IN_PROGRESS" %}
+            {{ showInProgress | safe | replace("statusIdPlaceholder", "officersStatus")}}
+        {% else %}
+            {{ showNotChecked | safe | replace("statusIdPlaceholder", "officersStatus")}}
+        {% endif %}
+    </li>
+    <li class="app-task-list__item">
+            <span class="app-task-list__task-name">
+                <a href="{{taskList.tasks.peopleSignificantControl.url}}" data-event-id="psc-company-information-section">
+                    People with significant control (PSCs)
+                </a>
+            </span>
+        {% if taskList.tasks.peopleSignificantControl.state === "CHECKED" %}
+            {{ showChecked | safe | replace("statusIdPlaceholder", "pscStatus")}}
+        {% elseif taskList.tasks.peopleSignificantControl.state === "IN_PROGRESS" %}
+            {{ showInProgress | safe | replace("statusIdPlaceholder", "pscStatus")}}
+        {% else %}
+            {{ showNotChecked | safe | replace("statusIdPlaceholder", "pscStatus")}}
+        {% endif %}
+    </li>
+    <li class="app-task-list__item">
+            <span class="app-task-list__task-name">
+                <a href="{{taskList.tasks.shareholders.url}}" data-event-id="shareholders-company-information-section">
+                    Shareholders
+                </a>
+            </span>
+        {% if taskList.tasks.shareholders.state === "CHECKED" %}
+            {{ showChecked | safe | replace("statusIdPlaceholder", "shareholdersStatus")}}
+        {% elseif taskList.tasks.shareholders.state === "IN_PROGRESS" %}
+            {{ showInProgress | safe | replace("statusIdPlaceholder", "shareholdersStatus")}}
+        {% else %}
+            {{ showNotChecked | safe | replace("statusIdPlaceholder", "shareholdersStatus")}}
+        {% endif %}
+    </li>
+</ul>

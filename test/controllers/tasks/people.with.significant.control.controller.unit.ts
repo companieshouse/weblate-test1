@@ -1,0 +1,466 @@
+jest.mock("../../../src/middleware/company.authentication.middleware");
+jest.mock("../../../src/services/psc.service");
+jest.mock("../../../src/utils/date");
+jest.mock("../../../src/utils/feature.flag");
+jest.mock("../../../src/utils/logger");
+jest.mock("../../../src/utils/update.confirmation.statement.submission");
+
+import mocks from "../../mocks/all.middleware.mock";
+import { PEOPLE_WITH_SIGNIFICANT_CONTROL_PATH, PSC_STATEMENT_PATH, URL_QUERY_PARAM } from "../../../src/types/page.urls";
+import request from "supertest";
+import app from "../../../src/app";
+import { companyAuthenticationMiddleware } from "../../../src/middleware/company.authentication.middleware";
+import { PEOPLE_WITH_SIGNIFICANT_CONTROL_ERROR, RADIO_BUTTON_VALUE, SECTIONS } from "../../../src/utils/constants";
+import { getPscs } from "../../../src/services/psc.service";
+import { toReadableFormat } from "../../../src/utils/date";
+import { isActiveFeature } from "../../../src/utils/feature.flag";
+import { urlUtils } from "../../../src/utils/url";
+import { createAndLogError } from "../../../src/utils/logger";
+import { sendUpdate } from "../../../src/utils/update.confirmation.statement.submission";
+import { PersonOfSignificantControl, SectionStatus } from "@companieshouse/api-sdk-node/dist/services/confirmation-statement";
+
+const PAGE_TITLE = "Review the people with significant control";
+const PAGE_HEADING = "Check the people with significant control (PSCs)";
+const STOP_PAGE_TITLE = "Incorrect people with significant control - File a confirmation statement";
+const RADIO_LEGEND = "Have you updated the PSC details?";
+const COMPANY_NUMBER = "12345678";
+const TRANSACTION_ID = "66544";
+const SUBMISSION_ID = "6464647";
+const COMPANY_NAME = "name";
+const REG_NO = "36363";
+const SERV_ADD_LINE_1 = "line1";
+const REGISTER_LOCATION = "UK";
+const COUNTRY_RESIDENCE = "UK";
+const ERROR_PAGE_TEXT = "Sorry, there is a problem with the service";
+const TEST_RLE_NAME = "Test Rle Name";
+const PEOPLE_WITH_SIGNIFICANT_CONTROL_URL =
+  urlUtils.getUrlWithCompanyNumberTransactionIdAndSubmissionId(PEOPLE_WITH_SIGNIFICANT_CONTROL_PATH,
+                                                               COMPANY_NUMBER,
+                                                               TRANSACTION_ID,
+                                                               SUBMISSION_ID);
+const PSC_STATEMENT_URL =
+  urlUtils.getUrlWithCompanyNumberTransactionIdAndSubmissionId(PSC_STATEMENT_PATH,
+                                                               COMPANY_NUMBER,
+                                                               TRANSACTION_ID,
+                                                               SUBMISSION_ID);
+const APPOINTMENT_TYPE_5007 = "5007";
+const APPOINTMENT_TYPE_5008 = "5008";
+const APPOINTMENT_TYPE_5009 = "5009";
+const DOB_MONTH = 3;
+const DOB_YEAR = 1955;
+const FORMATTED_DOB = "21 March 1955";
+const DOB_ISO = "1955-03-21";
+const FORENAME = "BOB";
+const FORENAME_TITLE_CASE = "Bob";
+const SURNAME = "WILSON";
+const SURNAME_2 = "STEVE";
+const ADDRESS_LINE_1 = "ADD LINE 1";
+const ADDRESS_LINE_1_TITLE_CASE = "Add Line 1";
+const ADDRESS_LINE_1_OFFICER_2 = "ADD LINE 1 OFFICER 2";
+const ADDRESS_LINE_1_OFFICER_2_TITLE_CASE = "Add Line 1 Officer 2";
+const COUNTRY = "UNITED KINGDOM";
+const COUNTRY_TITLE_CASE = "United Kingdom";
+
+const mockSendUpdate = sendUpdate as jest.Mock;
+
+const mockIsActiveFeature = isActiveFeature as jest.Mock;
+
+const mockCompanyAuthenticationMiddleware = companyAuthenticationMiddleware as jest.Mock;
+mockCompanyAuthenticationMiddleware.mockImplementation((req, res, next) => next());
+
+const mockGetPscs = getPscs as jest.Mock;
+mockGetPscs.mockResolvedValue([{
+  address: {
+    addressLine1: ADDRESS_LINE_1
+  },
+  appointmentType: APPOINTMENT_TYPE_5007,
+  dateOfBirth: {
+    month: DOB_MONTH,
+    year: DOB_YEAR
+  },
+  dateOfBirthIso: DOB_ISO,
+  nameElements: {
+    forename: FORENAME,
+    surname: SURNAME
+  },
+  serviceAddress: {
+    country: COUNTRY
+  }
+} as PersonOfSignificantControl ]);
+
+const mockToReadableFormat = toReadableFormat as jest.Mock;
+mockToReadableFormat.mockReturnValue(FORMATTED_DOB);
+
+const mockCreateAndLogError = createAndLogError as jest.Mock;
+mockCreateAndLogError.mockReturnValue(new Error());
+
+describe("People with significant control controller tests", () => {
+
+  beforeEach(() => {
+    mocks.mockAuthenticationMiddleware.mockClear();
+    mockGetPscs.mockClear();
+    mockToReadableFormat.mockClear();
+    mockCreateAndLogError.mockClear();
+    mockSendUpdate.mockClear();
+    mockIsActiveFeature.mockClear();
+  });
+
+  describe("get tests", () => {
+    it("should navigate to the active pscs page", async () => {
+      const response = await request(app).get(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL);
+      expect(response.text).toContain(PAGE_HEADING);
+      expect(mockGetPscs).toBeCalledTimes(1);
+      expect(mockGetPscs.mock.calls[0][1]).toBe(TRANSACTION_ID);
+      expect(mockToReadableFormat).toBeCalledTimes(2);
+      expect(mockToReadableFormat.mock.calls[0][0]).toBe(DOB_ISO);
+      expect(response.text).toContain(ADDRESS_LINE_1_TITLE_CASE);
+      expect(response.text).toContain(FORENAME_TITLE_CASE);
+      expect(response.text).toContain(SURNAME);
+      expect(response.text).toContain(FORMATTED_DOB);
+      expect(response.text).toContain(COUNTRY_TITLE_CASE);
+    });
+
+    it("should navigate to the active pscs page with multiple PSC and multiple psc flag is on", async () => {
+      mockIsActiveFeature.mockReturnValueOnce(true);
+      mockGetPscs.mockResolvedValueOnce([ {
+        address: {
+          addressLine1: ADDRESS_LINE_1
+        },
+        appointmentType: APPOINTMENT_TYPE_5007,
+        dateOfBirth: {
+          month: DOB_MONTH,
+          year: DOB_YEAR
+        },
+        dateOfBirthIso: DOB_ISO,
+        nameElements: {
+          forename: FORENAME,
+          surname: SURNAME
+        },
+        serviceAddress: {
+          country: COUNTRY
+        }
+      } as PersonOfSignificantControl, {
+        address: {
+          addressLine1: ADDRESS_LINE_1_OFFICER_2
+        },
+        appointmentType: APPOINTMENT_TYPE_5007,
+        dateOfBirth: {
+          month: 4,
+          year: 1999
+        },
+        dateOfBirthIso: DOB_ISO,
+        nameElements: {
+          forename: FORENAME,
+          surname: SURNAME_2
+        },
+        serviceAddress: {
+          country: COUNTRY
+        }
+      } as PersonOfSignificantControl ]);
+      const response = await request(app).get(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL);
+      expect(response.text).toContain(PAGE_HEADING);
+      expect(mockGetPscs).toBeCalledTimes(1);
+      expect(mockGetPscs.mock.calls[0][1]).toBe(TRANSACTION_ID);
+      expect(mockToReadableFormat).toBeCalledTimes(4);
+      expect(mockToReadableFormat.mock.calls[0][0]).toBe(DOB_ISO);
+      expect(response.text).toContain(ADDRESS_LINE_1_TITLE_CASE);
+      expect(response.text).toContain(FORENAME_TITLE_CASE);
+      expect(response.text).toContain(SURNAME);
+      expect(response.text).toContain(FORMATTED_DOB);
+      expect(response.text).toContain(COUNTRY_TITLE_CASE);
+      expect(response.text).toContain(SURNAME_2);
+      expect(response.text).toContain(ADDRESS_LINE_1_OFFICER_2_TITLE_CASE);
+    });
+
+    it("Should navigate to an error page if the function throws an error", async () => {
+      const spyGetUrlToPath = jest.spyOn(urlUtils, "getUrlToPath");
+      spyGetUrlToPath.mockImplementationOnce(() => { throw new Error(); });
+
+      const response = await request(app).get(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL);
+
+      expect(response.text).toContain(ERROR_PAGE_TEXT);
+
+      spyGetUrlToPath.mockRestore();
+    });
+
+    it("should navigate to error page if more than one psc is found", async () => {
+      mockGetPscs.mockResolvedValueOnce([ {}, {} ]);
+      const response = await request(app).get(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL);
+      expect(mockCreateAndLogError).toHaveBeenCalledTimes(1);
+      expect(mockCreateAndLogError).toHaveBeenCalledWith(expect.stringContaining("More than one"));
+      expect(response.text).toContain(ERROR_PAGE_TEXT);
+    });
+
+    it("should navigate to error page if more than five psc is found multiple psc flag on", async () => {
+      mockIsActiveFeature.mockReturnValueOnce(true);
+      mockGetPscs.mockResolvedValueOnce([ {}, {}, {}, {}, {}, {} ]);
+      const response = await request(app).get(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL);
+      expect(mockCreateAndLogError).toHaveBeenCalledTimes(1);
+      expect(mockCreateAndLogError).toHaveBeenCalledWith(expect.stringContaining("More than five"));
+      expect(response.text).toContain(ERROR_PAGE_TEXT);
+    });
+
+    it("should navigate to psc statement page if no psc is found", async () => {
+      mockGetPscs.mockResolvedValueOnce([ ]);
+      const response = await request(app).get(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL);
+      expect(response.status).toEqual(302);
+      expect(response.header.location).toEqual(pscStatementPathWithIsPscParam("false"));
+    });
+
+    it("should navigate to individual psc page if psc is individual", async () => {
+      const response = await request(app).get(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL);
+      expect(response.statusCode).toBe(200);
+      expect(response.text).toContain("1 individual person");
+      expect(response.text).toContain(FORMATTED_DOB);
+    });
+
+    it("should navigate to rle page if psc is rle type", async () => {
+      mockGetPscs.mockResolvedValueOnce([ { dateOfBirth: {
+        month: 3,
+        year: 1955
+      },
+      appointmentType: APPOINTMENT_TYPE_5008 } ]);
+      const response = await request(app).get(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL);
+      expect(response.statusCode).toBe(200);
+      expect(response.text).toContain("1 relevant legal entity");
+    });
+
+    it("should navigate to orp page if psc is orp type and populate with psc data", async () => {
+      mockGetPscs.mockResolvedValueOnce([ {
+        dateOfBirth: {
+          month: DOB_MONTH,
+          year: DOB_YEAR
+        },
+        appointmentType: APPOINTMENT_TYPE_5009,
+        companyName: COMPANY_NAME,
+        registerLocation: REGISTER_LOCATION,
+        registrationNumber: REG_NO,
+        serviceAddress: {
+          addressLine2: SERV_ADD_LINE_1
+        },
+        countryOfResidence: COUNTRY_RESIDENCE
+      } ]);
+      const response = await request(app).get(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL);
+      expect(response.statusCode).toBe(200);
+      expect(response.text).toContain("1 other registrable person");
+      expect(response.text).toContain(COMPANY_NAME);
+      expect(response.text).toContain(REGISTER_LOCATION);
+      expect(response.text).toContain(REG_NO);
+      expect(response.text).toContain("Line1");
+      expect(response.text).toContain(COUNTRY_RESIDENCE);
+    });
+
+    it("should navigate to error page if psc is unknown type", async () => {
+      mockGetPscs.mockResolvedValueOnce([ { appointmentType: "5010" } ]);
+      const response = await request(app).get(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL);
+      expect(response.text).toContain(ERROR_PAGE_TEXT);
+    });
+
+    it("should populate rle page with psc data", async () => {
+      mockGetPscs.mockResolvedValueOnce([ {
+        dateOfBirth: {
+          month: DOB_MONTH,
+          year: DOB_YEAR
+        },
+        appointmentType: APPOINTMENT_TYPE_5008,
+        companyName: COMPANY_NAME,
+        registerLocation: REGISTER_LOCATION,
+        registrationNumber: REG_NO,
+        serviceAddress: {
+          addressLine2: SERV_ADD_LINE_1
+        },
+        countryOfResidence: COUNTRY_RESIDENCE
+      } ]);
+      const response = await request(app).get(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL);
+      expect(response.statusCode).toBe(200);
+      expect(response.text).toContain("1 relevant legal entity");
+      expect(response.text).toContain(COMPANY_NAME);
+      expect(response.text).toContain(REGISTER_LOCATION);
+      expect(response.text).toContain(REG_NO);
+      expect(response.text).toContain("Line1");
+      expect(response.text).toContain(COUNTRY_RESIDENCE);
+    });
+
+    it("should not populate rle page with non mandatory data", async () => {
+      mockGetPscs.mockResolvedValueOnce([ {
+        dateOfBirth: {
+          month: DOB_MONTH,
+          year: DOB_YEAR
+        },
+        appointmentType: APPOINTMENT_TYPE_5008,
+        companyName: COMPANY_NAME,
+        serviceAddress: {
+          addressLine2: SERV_ADD_LINE_1
+        }
+      } ]);
+      const response = await request(app).get(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL);
+      expect(response.statusCode).toBe(200);
+      expect(response.text).toContain("1 relevant legal entity");
+      expect(response.text).toContain(COMPANY_NAME);
+      expect(response.text).not.toContain("Registration number");
+      expect(response.text).toContain("Line1");
+      expect(response.text).not.toContain("Country of residence");
+    });
+
+    it("should navigate to error page if no date of birth is found for individual psc", async () => {
+      const FORENAME = "Fred";
+      const SURNAME = "Smith";
+
+      mockGetPscs.mockResolvedValueOnce([ {
+        appointmentType: APPOINTMENT_TYPE_5007,
+        companyName: COMPANY_NAME,
+        nameElements: {
+          forename: FORENAME,
+          surname: SURNAME
+        },
+        serviceAddress: {
+          addressLine2: SERV_ADD_LINE_1
+        }
+      } ]);
+      const response = await request(app).get(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL);
+      expect(response.text).toContain(ERROR_PAGE_TEXT);
+    });
+
+    it("should navigate to error page if no date of birth month is found for individual psc", async () => {
+      mockGetPscs.mockResolvedValueOnce([ {
+        appointmentType: APPOINTMENT_TYPE_5007,
+        dateOfBirth: {
+          year: DOB_YEAR
+        },
+        companyName: COMPANY_NAME,
+        serviceAddress: {
+          addressLine2: SERV_ADD_LINE_1
+        }
+      } ]);
+      const response = await request(app).get(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL);
+      expect(response.text).toContain(ERROR_PAGE_TEXT);
+    });
+
+    it("should navigate to error page if no date of birth year is found for individual psc", async () => {
+      mockGetPscs.mockResolvedValueOnce([ {
+        appointmentType: APPOINTMENT_TYPE_5007,
+        dateOfBirth: {
+          month: DOB_MONTH
+        },
+        companyName: COMPANY_NAME,
+        serviceAddress: {
+          addressLine2: SERV_ADD_LINE_1
+        }
+      } ]);
+      const response = await request(app).get(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL);
+      expect(response.text).toContain(ERROR_PAGE_TEXT);
+    });
+
+    it("should navigate to error page if no date of birth and no name is found for individual psc", async () => {
+      mockGetPscs.mockResolvedValueOnce([ {
+        appointmentType: APPOINTMENT_TYPE_5007,
+        companyName: COMPANY_NAME,
+        serviceAddress: {
+          addressLine2: SERV_ADD_LINE_1
+        }
+      } ]);
+      const response = await request(app).get(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL);
+      expect(response.text).toContain(ERROR_PAGE_TEXT);
+      expect(mockCreateAndLogError).toHaveBeenCalledTimes(1);
+      expect(mockCreateAndLogError).toHaveBeenCalledWith(expect.stringContaining("psc name undefined undefined"));
+    });
+
+    it("should not navigate to error page if no date of birth is found for rle", async () => {
+      mockGetPscs.mockResolvedValueOnce([ {
+        nameElements: {
+          surname: TEST_RLE_NAME
+        },
+        appointmentType: APPOINTMENT_TYPE_5008,
+        companyName: COMPANY_NAME,
+        serviceAddress: {
+          addressLine2: SERV_ADD_LINE_1
+        }
+      } ]);
+      const response = await request(app).get(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL);
+      expect(response.statusCode).toBe(200);
+      expect(response.text).toContain(TEST_RLE_NAME);
+      expect(response.text).toContain("1 relevant legal entity");
+      expect(response.text).toContain(COMPANY_NAME);
+      expect(response.text).not.toContain("Registration number");
+      expect(response.text).toContain("Line1");
+      expect(response.text).not.toContain("Country of residence");
+    });
+  });
+
+  describe("post tests", function () {
+    it("Should redisplay psc page with error when radio button is not selected", async () => {
+      const response = await request(app).post(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL);
+
+      expect(response.status).toEqual(200);
+      expect(response.text).toContain(PAGE_TITLE);
+      expect(response.text).toContain(PEOPLE_WITH_SIGNIFICANT_CONTROL_ERROR);
+      expect(response.text).toContain(PAGE_HEADING);
+      expect(response.text).toContain("1 individual person");
+      expect(response.text).toContain(FORMATTED_DOB);
+    });
+
+    it("Should display wrong psc data page when the no radio button is selected", async () => {
+      const response = await request(app)
+        .post(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL)
+        .send({ pscRadioValue: RADIO_BUTTON_VALUE.NO });
+
+      expect(response.status).toEqual(200);
+      expect(response.text).toContain(RADIO_LEGEND);
+      expect(response.text).toContain(STOP_PAGE_TITLE);
+      expect(mockSendUpdate.mock.calls[0][1]).toBe(SECTIONS.PSC);
+      expect(mockSendUpdate.mock.calls[0][2]).toBe(SectionStatus.NOT_CONFIRMED);
+    });
+
+    it("Should redirect to psc statement page when yes radio button is selected", async () => {
+      const response = await request(app)
+        .post(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL)
+        .send({ pscRadioValue: RADIO_BUTTON_VALUE.YES });
+
+      expect(response.status).toEqual(302);
+      expect(response.header.location).toEqual(pscStatementPathWithIsPscParam("true"));
+    });
+
+    it("should display error page if no psc is found when radio button is not selected", async () => {
+      mockGetPscs.mockResolvedValueOnce([ ]);
+      const response = await request(app).post(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL);
+      expect(mockCreateAndLogError).toHaveBeenCalledTimes(1);
+      expect(mockCreateAndLogError).toHaveBeenCalledWith(expect.stringContaining("No PSC data found, no radio button selected"));
+      expect(response.status).toEqual(500);
+      expect(response.text).toContain("Sorry, there is a problem with the service");
+    });
+
+    it("Should redirect to psc statement page when Recently Filed radio button is selected", async () => {
+      const response = await request(app)
+        .post(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL)
+        .send({ pscRadioValue: RADIO_BUTTON_VALUE.RECENTLY_FILED });
+
+      expect(response.status).toEqual(302);
+      expect(response.header.location).toEqual(pscStatementPathWithIsPscParam("true"));
+    });
+
+    it("Should return error page when radio button id is not valid", async () => {
+      const response = await request(app)
+        .post(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL)
+        .send({ pscRadioValue: "malicious code block" });
+
+      expect(response.status).toEqual(500);
+      expect(response.text).toContain(ERROR_PAGE_TEXT);
+    });
+
+    it("Should return an error page if error is thrown in post function", async () => {
+      const spyGetUrlToPath = jest.spyOn(urlUtils, "getUrlToPath");
+      spyGetUrlToPath.mockImplementationOnce(() => { throw new Error(); });
+      const response = await request(app).post(PEOPLE_WITH_SIGNIFICANT_CONTROL_URL);
+
+      expect(response.status).toEqual(500);
+      expect(response.text).toContain(ERROR_PAGE_TEXT);
+
+      // restore original function so it is no longer mocked
+      spyGetUrlToPath.mockRestore();
+    });
+  });
+});
+
+const pscStatementPathWithIsPscParam = (isPscParam: string) => {
+  return urlUtils.setQueryParam(PSC_STATEMENT_URL, URL_QUERY_PARAM.IS_PSC, isPscParam);
+};

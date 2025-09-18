@@ -1,0 +1,116 @@
+{% extends "layout.html" %}
+
+{% block pageTitle %}
+  {% if errorList.length > 0 %}
+    Error:
+  {% endif %}
+  Review the officers
+{% endblock %}
+
+{% block backLink %}
+  {% include "includes/back-link.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-three-quarters">
+    {% if officerErrorMsg %}
+      {{ govukErrorSummary({
+        titleText: "There is a problem",
+        errorList: [
+          {
+            text: officerErrorMsg,
+            href: "#officers"
+          }
+        ]
+      }) }}
+      {% set activeOfficersError = {
+        text: officerErrorMsg
+      }
+      %}
+    {% else %}
+      {% set activeOfficersError = false %}
+    {% endif %}
+    <form action="" method="post">
+      {% include "includes/csrf_token.html" %}
+      <h1 class="govuk-heading-l">Check the officers' details</h1>
+
+      {% set naturalSecretaryHTML %}
+        {% include "includes/natural-secretaries.html" %}
+      {% endset %}
+
+      {% set corporateSecretaryHTML %}
+        {% include "includes/corporate-secretaries.html" %}
+      {% endset %}
+
+      {% set directorHTML %}
+        {% include "includes/natural-directors.html" %}
+      {% endset %}
+
+      {% set corporateDirectorsHTML %}
+        {% include "includes/corporate-directors.html" %}
+      {% endset %}
+
+      {% set officerRows = [] %}
+      {% if naturalSecretaryList|length %}
+        {% set officerRows = (officerRows.push([{html: naturalSecretaryHTML}]), officerRows) %}
+      {% endif %}
+      {% if corporateSecretaryList|length %}
+        {% set officerRows = (officerRows.push([{html: corporateSecretaryHTML}]), officerRows) %}
+      {% endif %}
+      {% if naturalDirectorList|length %}
+        {% set officerRows = (officerRows.push([{html: directorHTML}]), officerRows) %}
+      {% endif %}
+      {% if corporateDirectorList|length %}
+        {% set officerRows = (officerRows.push([{html: corporateDirectorsHTML}]), officerRows) %}
+      {% endif %}
+
+      {{ govukTable({
+        rows: officerRows
+      }) }}
+
+      {{ govukRadios({
+        classes: "govuk-radios",
+        idPrefix: "officers",
+        name: "activeOfficers",
+        errorMessage: activeOfficersError,
+        fieldset: {
+          legend: {
+            html: "Are the officer details correct?",
+            isPageHeading: false,
+            classes: "govuk-fieldset__legend--l"
+          }
+        },
+        hint: {
+          html: officerHTML
+        },
+        items: [
+          {
+            value: "yes",
+            text: "Yes",
+            attributes: {
+              "data-event-id": "officer-yes-radio-button"
+            }
+          },
+          {
+            value: "no",
+            text: "No",
+            attributes: {
+              "data-event-id": "officer-no-radio-button"
+            }
+          },
+          {
+            value: "recently_filed",
+            text: "No, but an update has been submitted",
+            attributes: {
+              "data-event-id": "officer-recently-filed-radio-button"
+            }
+          }
+        ]
+       }) }}
+
+      {% include "includes/continue-button.html" %}
+    </form>
+  </div>
+</div>
+{% endblock %}

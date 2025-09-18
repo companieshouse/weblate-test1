@@ -1,0 +1,112 @@
+{% extends "layout.html" %}
+
+{% block pageTitle %}
+  {% if errorList.length > 0 %}
+    Error:
+  {% endif %}  Review the statement of capital
+{% endblock %}
+
+{% block backLink %}
+  {% include "includes/back-link.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        <form action="" method="post">
+            {% include "includes/csrf_token.html" %}
+            {% if statementOfCapitalErrorMsg %}
+              {{ govukErrorSummary({
+                titleText: "There is a problem",
+                errorList: [
+                {
+                  text: statementOfCapitalErrorMsg,
+                  href: "#statement-of-capital"
+                }
+              ]
+              }) }}
+              {% set statementOfCapitalError = {
+                text: statementOfCapitalErrorMsg
+              } %}
+            {% else %}
+              {% set statementOfCapitalError = false %}
+            {% endif %}
+
+            <h1 class="govuk-heading-l">Check the statement of capital</h1>
+
+            {% if sharesValidation === false %}
+              {% set warningHTML %}
+                <p><strong>You cannot continue to file a confirmation statement in this service.</strong></p>
+                <p><strong>The company's share capital does not match the number of shares held by its shareholders.</strong></p>
+                <p><strong>You must update this information by filing a confirmation statement through our <a href="{{EWF_URL}}" data-event-id="webfiling-service-link-from-statement-of-capital-page">WebFiling service</a>.</strong></p>
+              {% endset %}
+
+              {{ govukWarningText({
+                html: warningHTML,
+                iconFallbackText: "Warning"})
+              }}
+            {% endif %}
+
+            {% if totalAmountUnpaidValidation === false %}
+              {% set warningHTML %}
+                <p><strong>You cannot continue to file a confirmation statement in this service.</strong></p>
+                <p><strong>The total amount unpaid for all shares is missing on this company’s statement of capital.</strong></p>
+                <p><strong>You must update this information by filing a confirmation statement through our <a href="{{EWF_URL}}" data-event-id="webfiling-service-link-from-statement-of-capital-page">WebFiling service</a>.</strong></p>
+              {% endset %}
+
+              {{ govukWarningText({
+                html: warningHTML,
+                iconFallbackText: "Warning"})
+              }}
+            {% endif %}
+
+            {% include "includes/statement-of-capital.html" %}
+
+            {% if sharesValidation and totalAmountUnpaidValidation %}
+              {{ govukRadios({
+                classes: "govuk-radios",
+                idPrefix: "statement-of-capital",
+                name: "statementOfCapital",
+                errorMessage: statementOfCapitalError,
+                fieldset: {
+                  legend: {
+                    html: "Is the statement of capital correct?",
+                    isPageHeading: false,
+                    classes: "govuk-fieldset__legend--l"
+                  }
+                },
+                items: [
+                  {
+                    value: "yes",
+                    text: "Yes",
+                    attributes: {
+                      "data-event-id": "yes-radio-button"
+                    }
+                  },
+                  {
+                    value: "no",
+                    text: "No",
+                    attributes: {
+                      "data-event-id": "no-radio-button"
+                    }
+                  },
+                  {
+                    value: "recently_filed",
+                    text: "No, but an update has been submitted",
+                    attributes: {
+                      "data-event-id": "recently-filed-radio-button"
+                    }
+                  }
+                ]
+              }) }}
+            {% endif %}
+
+            <input type="hidden" id="sharesValidation" name="sharesValidation" value= {{ sharesValidation }}>
+            <input type="hidden" id="totalAmountUnpaidValidation" name="totalAmountUnpaidValidation" value= {{ totalAmountUnpaidValidation }}>
+
+            {% include "includes/continue-button.html" %}
+        </form>
+    </div>
+</div>
+{% endblock %}
