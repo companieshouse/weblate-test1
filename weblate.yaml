@@ -1,0 +1,30 @@
+---
+version: '1.0'
+
+project:
+  name: "%(slug)s"
+  slug: "%(slug)s"
+
+components:
+  # --- Node.js JSON translations ---
+  - name: Locales JSON
+    slug: locales-json
+    filemask: locales/*/*.json
+    source: locales/en/*.json
+    translation: locales/{lang}/*.json
+    language_map:
+      cy: cy
+    file_format: json
+    source_language: en
+    vcs: git
+    repo: git@github.com:companieshouse/%(slug)s.git
+    push: git@github.com:companieshouse/%(slug)s.git
+    branch: main
+    # Automatically add new languages when new files appear
+    add_new_translations: true
+    # Built-in Weblate checks
+    checks:
+      - consistency
+      - placeholders
+      - punctuation
+      - capitalization
