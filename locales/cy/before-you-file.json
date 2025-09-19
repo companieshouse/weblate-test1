@@ -10,5 +10,9 @@
     "BYFCheckboxText": "CY-I have checked the limited partnership information and submitted any updates",
     "BYFContinueBotton": "CY-Continue",
     "BYFAlternateTextPFLP": "CY-some value.",
-    "BYFErrorMessageNotChecked": "CY-TBC"
+    "BYFErrorMessageNotChecked": "CY-TBC",
+    "BYFFeeInfoParagraph1": "",
+    "BYFSubmittedUpdatesParagraph": "",
+    "BYFFeeInfoParagraph2": "",
+    "BYFFeeInfoTitle": ""
 }
